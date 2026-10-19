@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prediksi Nilai Akhir Siswa | Regresi Linear</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --brand:#4f46e5; --brand2:#7c3aed; --ink:#0f172a; --muted:#64748b; }
+    body { font-family:'Inter',system-ui,sans-serif; background:#f1f5f9; color:var(--ink); }
+    .hero { background:linear-gradient(135deg,#312e81 0%,var(--brand) 50%,var(--brand2) 100%); color:#fff; padding:56px 0 110px; }
+    .hero .badge-soft { background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.28); font-weight:500; }
+    .hero h1 { font-weight:800; letter-spacing:-.02em; }
+    .hero p { color:#e0e7ff; max-width:640px; }
+    .pull-up { margin-top:-80px; }
+    .card-x { border:0; border-radius:18px; box-shadow:0 10px 30px rgba(15,23,42,.08); }
+    .section-title { font-size:.78rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--brand); }
+    .score-input { font-size:2.2rem; font-weight:700; text-align:center; height:72px; border-radius:14px; }
+    .btn-brand { background:linear-gradient(135deg,var(--brand),var(--brand2)); border:0; color:#fff; font-weight:600; border-radius:12px; padding:14px; }
+    .btn-brand:hover { color:#fff; filter:brightness(1.08); }
+    .chip { cursor:pointer; border-radius:999px; font-weight:600; }
+    .result-num { font-size:4rem; font-weight:800; line-height:1; letter-spacing:-.03em; }
+    .stat { background:#f8fafc; border-radius:14px; padding:14px 16px; height:100%; }
+    .stat .v { font-size:1.35rem; font-weight:700; }
+    .stat .l { font-size:.78rem; color:var(--muted); }
+    .step-no { width:34px; height:34px; border-radius:10px; background:#eef2ff; color:var(--brand); font-weight:700; display:flex; align-items:center; justify-content:center; flex:none; }
+    .formula { background:#0f172a; color:#e2e8f0; border-radius:12px; padding:14px 18px; font-family:ui-monospace,Consolas,monospace; }
+    .formula b { color:#a5b4fc; }
+    img.plot { width:100%; border-radius:12px; border:1px solid #e2e8f0; }
+    footer { color:var(--muted); font-size:.85rem; }
+  </style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="container">
+    <span class="badge badge-soft rounded-pill px-3 py-2 mb-3"><i class="bi bi-graph-up-arrow me-1"></i> Praktikum Pembelajaran Mesin &middot; TA-02</span>
+    <h1 class="display-5">Prediksi Nilai Akhir Siswa</h1>
+    <p class="fs-5 mb-0">Aplikasi berbasis <strong>Regresi Linear Sederhana</strong> yang memperkirakan nilai akhir (G3) dari nilai periode kedua (G2), dilatih dari data <em>UCI Student Performance</em>.</p>
+  </div>
+</header>
+
+<main class="container pull-up pb-5">
+  <div class="row g-4">
+
+    <!-- KIRI: prediksi -->
+    <div class="col-lg-5">
+      <div class="card card-x">
+        <div class="card-body p-4">
+          <div class="section-title mb-1">Coba Prediksi</div>
+          <h2 class="h4 fw-bold mb-3">Masukkan Nilai Periode 2 (G2)</h2>
+
+          <form method="post" id="form">
+            <input type="number" step="0.1" min="0" max="20" class="form-control score-input"
+                   id="g2" name="g2" value="{{ g2 }}" placeholder="0 – 20" required autofocus>
+            <div class="form-text text-center mb-3">Skala nilai 0 sampai 20</div>
+
+            <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+              <span class="text-muted small align-self-center me-1">Contoh cepat:</span>
+              <button type="button" class="btn btn-outline-secondary btn-sm chip" data-v="6">6</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm chip" data-v="10">10</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm chip" data-v="13">13</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm chip" data-v="16">16</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm chip" data-v="19">19</button>
+            </div>
+
+            <button class="btn btn-brand w-100"><i class="bi bi-lightning-charge-fill me-1"></i> Prediksi Nilai Akhir</button>
+          </form>
+
+          {% if error %}
+          <div class="alert alert-danger mt-3 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>{{ error }}</div>
+          {% endif %}
+
+          {% if result is not none %}
+          <hr class="my-4">
+          <div class="text-center">
+            <div class="text-muted small mb-1">Estimasi Nilai Akhir (G3)</div>
+            <div class="result-num text-{{ kat[1] }}">{{ result }}<span class="fs-4 text-muted fw-semibold"> / 20</span></div>
+            <span class="badge text-bg-{{ kat[1] }} rounded-pill px-3 py-2 mt-3">{{ kat[0] }}</span>
+            <div class="progress mt-3" style="height:10px;border-radius:99px">
+              <div class="progress-bar bg-{{ kat[1] }}" style="width: {{ (result/20*100)|round(1) }}%"></div>
+            </div>
+            <p class="text-muted mt-3 mb-1">{{ kat[2] }}</p>
+            <p class="small text-muted mb-0">
+              Dari G2 = <strong>{{ g2 }}</strong> ke G3 = <strong>{{ result }}</strong>
+              ({{ '%+.2f'|format(selisih) }} poin).
+            </p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card card-x mt-4">
+        <div class="card-body p-4">
+          <div class="section-title mb-2">Rumus Model</div>
+          <div class="formula">G3 = <b>{{ m.intercept }}</b> + <b>{{ m.coef }}</b> &times; G2</div>
+          <p class="small text-muted mt-3 mb-0">
+            Setiap kenaikan 1 poin G2, nilai akhir diprediksi naik sekitar <strong>{{ m.coef }}</strong> poin.
+            Intersep ({{ m.intercept }}) adalah prediksi G3 saat G2 = 0, hanya titik awal garis dan kurang bermakna secara praktis.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- KANAN: penjelasan -->
+    <div class="col-lg-7">
+
+      <div class="card card-x">
+        <div class="card-body p-4">
+          <div class="section-title mb-1">Performa Model</div>
+          <h2 class="h4 fw-bold mb-3">Seberapa akurat prediksinya?</h2>
+          <div class="row g-3">
+            <div class="col-6 col-md-3"><div class="stat"><div class="v">{{ m.r2 }}</div><div class="l">R&sup2; (data uji)</div></div></div>
+            <div class="col-6 col-md-3"><div class="stat"><div class="v">{{ m.rmse }}</div><div class="l">RMSE (poin nilai)</div></div></div>
+            <div class="col-6 col-md-3"><div class="stat"><div class="v">{{ m.mae }}</div><div class="l">MAE (poin nilai)</div></div></div>
+            <div class="col-6 col-md-3"><div class="stat"><div class="v">{{ m.corr }}</div><div class="l">Korelasi G2&ndash;G3</div></div></div>
+          </div>
+          <ul class="mt-3 mb-0 text-muted small">
+            <li><strong>R&sup2; = {{ m.r2 }}</strong>: sekitar {{ (m.r2*100)|round(0)|int }}% variasi nilai akhir dapat dijelaskan oleh nilai G2.</li>
+            <li><strong>RMSE = {{ m.rmse }}</strong>: rata-rata prediksi meleset sekitar {{ m.rmse }} poin pada skala 0&ndash;20.</li>
+            <li>Dilatih dengan {{ m.n_train }} data, diuji dengan {{ m.n_test }} data (dari {{ m.n_clean }} data bersih).</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card card-x mt-4">
+        <div class="card-body p-4">
+          <div class="section-title mb-1">Visualisasi</div>
+          <h2 class="h4 fw-bold mb-3">Hubungan G2 dan G3</h2>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <img class="plot" src="{{ url_for('static', filename='scatter_clean.png') }}" alt="Scatterplot G2 vs G3">
+              <div class="small text-muted mt-2">Titik data membentuk pola garis naik, sehingga asumsi linear terpenuhi.</div>
+            </div>
+            <div class="col-md-6">
+              <img class="plot" src="{{ url_for('static', filename='actual_vs_pred.png') }}" alt="Aktual vs prediksi">
+              <div class="small text-muted mt-2">Semakin dekat titik ke garis merah, semakin akurat prediksinya.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card card-x mt-4">
+        <div class="card-body p-4">
+          <div class="section-title mb-1">Cara Kerja</div>
+          <h2 class="h4 fw-bold mb-3">Dari data sampai prediksi</h2>
+          <div class="d-flex gap-3 mb-3"><div class="step-no">1</div><div><strong>Data.</strong> Dataset UCI Student Performance (mata pelajaran Matematika). Kolom yang dipakai: G2 (nilai periode 2) dan G3 (nilai akhir).</div></div>
+          <div class="d-flex gap-3 mb-3"><div class="step-no">2</div><div><strong>Pembersihan.</strong> Siswa dengan G3 = 0 (tidak mengikuti ujian akhir) dibuang karena bukan nilai asli.</div></div>
+          <div class="d-flex gap-3 mb-3"><div class="step-no">3</div><div><strong>Pelatihan.</strong> <code>LinearRegression</code> scikit-learn mencari garis terbaik yang meminimalkan selisih kuadrat antara nilai aktual dan prediksi.</div></div>
+          <div class="d-flex gap-3"><div class="step-no">4</div><div><strong>Prediksi.</strong> Model disimpan dengan Joblib, dimuat Flask, lalu menghitung G3 dari G2 yang Anda masukkan.</div></div>
+        </div>
+      </div>
+
+      <div class="alert alert-warning border-0 mt-4 mb-0" style="border-radius:14px">
+        <i class="bi bi-info-circle me-1"></i>
+        <strong>Keterbatasan:</strong> model hanya memakai satu fitur (G2), jadi tidak menangkap faktor lain seperti kehadiran atau kebiasaan belajar. G2 dan G3 saling berkaitan karena keduanya mengukur kemampuan siswa yang sama, sehingga hasil ini adalah estimasi, bukan hubungan sebab-akibat murni.
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="text-center pb-4">Praktikum Pembelajaran Mesin &middot; Regresi Linear &middot; Flask + scikit-learn</footer>
+
+<script>
+  document.querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => {
+    document.getElementById('g2').value = b.dataset.v;
+    document.getElementById('form').submit();
+  }));
+</script>
+</body>
+</html>

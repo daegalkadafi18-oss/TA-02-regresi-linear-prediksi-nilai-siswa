@@ -1,0 +1,1 @@
+{"n_total": 395, "n_clean": 357, "n_train": 285, "n_test": 72, "corr": 0.966, "r2": 0.929, "rmse": 0.828, "mae": 0.585, "intercept": 0.275, "coef": 0.99}
